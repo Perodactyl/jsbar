@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@types/node": "^22.5.1"
+  },
+  "dependencies": {
+    "@types/systeminformation": "^3.54.1",
+    "systeminformation": "^5.23.5"
+  }
+}
