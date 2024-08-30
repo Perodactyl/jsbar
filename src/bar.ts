@@ -148,7 +148,7 @@ export default async function statusbar() {
 	//Hides the terminal caret and enables mouse input.
 	process.stdout.write("\x1B[?25l\x1B[?1000h");
 	// display(await status());
-	beginInput();
+	beginInput(handleEvent);
 	display("");
 	return setInterval(async ()=>{
 		display(await status());

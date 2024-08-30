@@ -1,4 +1,4 @@
-import { handleEvent } from "./bar";
+let handleEvent; //Lazily settings this using an argument solves a circular dependency.
 
 type ClickEventType = "mouseLeft" | "mouseMiddle" | "mouseRight" | "mouseUp" | "scrollUp" | "scrollDown";
 export interface ClickEvent {
@@ -25,7 +25,8 @@ let clickEventMap: Map<number, ClickEventType> = new Map();
 	clickEventMap.set(0x60, "scrollUp");
 	clickEventMap.set(0x61, "scrollDown");
 
-export function beginInput() {
+export function beginInput(eventHandler: (event:ClickEvent)=>void) {
+	handleEvent = eventHandler;
 	process.stdin.setRawMode(true);
 	process.stdin.on("data", chunk => {
 		// process.stderr.write("I love refrigerators")

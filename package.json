@@ -1,9 +1,37 @@
 {
-  "devDependencies": {
-    "@types/node": "^22.5.1"
-  },
-  "dependencies": {
-    "@types/systeminformation": "^3.54.1",
-    "systeminformation": "^5.23.5"
-  }
+	"name": "jsbar",
+	"displayName": "JSBar",
+
+	"author": {
+		"name": "Perodactyl",
+		"email": "friedwhoman@gmail.com",
+		"url": "https://github.com/Perodactyl"
+	},
+	"repository": {
+		"type": "github",
+		"url": "https://github.com/Perodactyl/jsbar"
+	},
+
+	"license": "LGPL-3.0-or-later",
+
+	"scripts": {
+		"build": "rollup --config",
+		"unbuild": "rm jsbar.js",
+		"start": "JSBAR_HOME=$(pwd) ./bar.sh"
+	},
+
+	"bin": "bar.sh",
+
+	"devDependencies": {
+		"@rollup/plugin-terser": "^0.4.4",
+		"@rollup/plugin-typescript": "11.1.6",
+		"@types/node": "^22.5.1",
+		"@types/rollup": "^0.51.4",
+		"rollup": "4.21.2",
+		"tslib": "^2.7.0"
+	},
+
+	"dependencies": {
+		"systeminformation": "^5.23.5"
+	}
 }

@@ -1,6 +1,6 @@
-import os from "os";
-import cp from "child_process";
-import sysinfo from "systeminformation";
+import { freemem, totalmem } from "node:os";
+import { execSync } from "node:child_process";
+import * as sysinfo from "systeminformation";
 
 import { MetaModule, Module, RenderEnvironment, RenderModule, RenderModuleTyped } from "./bar";
 import style from "./style";
@@ -125,7 +125,7 @@ export function command(command: string): RenderModule {
 	return {
 		type: "render",
 		render() {
-			let stdout = cp.execSync(command);
+			let stdout = execSync(command);
 			return stdout.toString('utf8').trim();
 		},
 	};
@@ -226,8 +226,8 @@ export function ram(format: FormatString, format2?: FormatString): RenderModuleT
 	return {
 		type: "render",
 		render() {
-			let free = os.freemem();
-			let total = os.totalmem();
+			let free = freemem();
+			let total = totalmem();
 			let used = total - free;
 
 			let env = {
@@ -254,8 +254,7 @@ export function i3state(format: FormatString): RenderModule {
 	return {
 		type: "render",
 		render(env) {
-			let state = cp
-				.execSync("i3-msg -t GET_BINDING_STATE | jq .name | tr -d '\"'")
+			let state = execSync("i3-msg -t GET_BINDING_STATE | jq .name | tr -d '\"'")
 				.toString('utf8').trim();
 			return applyFormat(format, {
 				state: state
