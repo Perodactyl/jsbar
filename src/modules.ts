@@ -47,6 +47,9 @@ export function text(msg: string): RenderModule {
  * - `shortMonthName`: Shortened month name. Example: Aug
  * - `dayOfMonth`: Numerical day of the current month. Example: 21
  * - `dayOfMonthSuffix`: **Suffix** to `dayOfMonth`. Example for dayOfMonth=21: "st". Combines to form "21st"
+ * - `dayOfWeek`: Current day. Example: Wednesday.
+ * - `dayOfWeekNumber`: Number of days since Sunday. Example: 3.
+ * - `shortDayOfWeek`: Abbreviated day. Example: Wed.
  * - `hour`: Current numerical hour out of 24. Example: 23
  * - `twelveHour`: Current numerical hour out of 12. Example: 11
  * - `amPm`: Equal to "pm" if it is after noon. Example: pm
@@ -93,6 +96,18 @@ export function time(format1: FormatString, format2?: FormatString): RenderModul
 						default:  return "th";
 					}
 				})(),
+				dayOfWeek: [
+					"Monday", "Tuesday",
+					"Wednesday", "Thursday",
+					"Friday", "Saturday",
+					"Sunday",
+				][d.getDay()-1],
+				dayOfWeekNumber: d.getDay(),
+				shortDayOfWeek: [
+					"Mon", "Tue", "Wed",
+					"Thu", "Fri", "Sat",
+					"Sun",
+				][d.getDay()-1],
 				hour: d.getHours(),
 				twelveHour: ((d.getHours() - 1) % 12) + 1,
 				amPm: d.getHours() >= 12 ? "pm" : "am",

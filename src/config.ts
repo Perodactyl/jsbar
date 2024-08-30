@@ -22,7 +22,7 @@ export default {
 		text(" "),
 
 		powerline("", "", "red", [
-			time(" {twelveHour}:{minute}:{second}", " {shortMonthName} {dayOfMonth}{dayOfMonthSuffix}, {year}"),
+			time(" {twelveHour}:{minute}:{second}", " {shortDayOfWeek} {shortMonthName} {dayOfMonth}{dayOfMonthSuffix}, {year}"),
 			// powerline("", "bright-red", "right"),
 		]),
 	],
