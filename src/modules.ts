@@ -2,7 +2,7 @@ import os from "os";
 import cp from "child_process";
 import sysinfo from "systeminformation";
 
-import { MetaModule, Module, RenderModule } from "./bar";
+import { MetaModule, Module, RenderEnvironment, RenderModule, RenderModuleTyped } from "./bar";
 import style from "./style";
 import { humanBytes } from "./utils";
 
@@ -54,14 +54,18 @@ export function text(msg: string): RenderModule {
  * - `second`: Current second. Example: 59
  * 
  * No further precision is given since the bar doesn't update very fast.
+ * 
+ * If `format2` is defined, it will toggle between both formats when clicked.
  * @todo Add Day of Week
 */
-export function time(format: FormatString): RenderModule {
+export function time(format1: FormatString, format2: FormatString): RenderModuleTyped<{isState2:boolean}>
+export function time(format1: FormatString): RenderModuleTyped<{isState2:boolean}>
+export function time(format1: FormatString, format2?: FormatString): RenderModuleTyped<{isState2:boolean}> {
 	return {
 		type: "render",
 		render() {
 			let d = new Date();
-			return applyFormat(format, {
+			let env = {
 				year: d.getFullYear(),
 				month: d.getMonth(),
 				monthName: [
@@ -94,12 +98,21 @@ export function time(format: FormatString): RenderModule {
 				amPm: d.getHours() >= 12 ? "pm" : "am",
 				minute: d.getMinutes().toString().padStart(2,"0"),
 				second: d.getSeconds().toString().padStart(2,"0"),
-			});
-		}
+			};
+			if(format2 && this.data.isState2)
+				return applyFormat(format2, env);
+			else
+				return applyFormat(format1, env);
+		},
+		input(event) {
+			if(event.type == "mouseLeft")
+				this.data.isState2 = !this.data.isState2;
+		},
+		data: {isState2:false},
 	};
 }
 /** Outputs a variable from your environment. A use case would be indicating what user is logged in or which virtual TTY is in use. */
-export function envvar(name: string): Module {
+export function envvar(name: string): RenderModule {
 	return {
 		type: "render",
 		render() {
@@ -108,13 +121,13 @@ export function envvar(name: string): Module {
 	};
 }
 /** Runs a command and outputs its (trimmed) result. Use case may include collecting information about another process. */
-export function command(command: string): Module {
+export function command(command: string): RenderModule {
 	return {
 		type: "render",
 		render() {
 			let stdout = cp.execSync(command);
 			return stdout.toString('utf8').trim();
-		}
+		},
 	};
 }
 /**
@@ -139,22 +152,24 @@ export function powerline(a:string,b:string,c:"left"|"right"|string, modules?:Mo
 				type: "render",
 				auto_bg: false,
 				auto_fg: false,
-				render() {
-					let bg = this.bg_color;
-					this.bg_color = b;
+				render(env: RenderEnvironment) {
+					let bg = env.bg_color;
+					env.bg_color = b;
 					return style(a, `reset fg:${b} bg:${bg}`);
-				}
+				},
+				alloc() { return a.length; },
 			}
 		} else /*if(c == "right")*/ {
 			return {
 				type: "render",
 				auto_bg: false,
 				auto_fg: false,
-				render() {
-					let fg = this.bg_color;
-					this.bg_color = b;
+				render(env: RenderEnvironment) {
+					let fg = env.bg_color;
+					env.bg_color = b;
 					return style(a, `reset fg:${fg} bg:${b}`);
-				}
+				},
+				alloc() { return a.length; },
 			}
 		}
 	}
@@ -167,8 +182,8 @@ export function powerline(a:string,b:string,c:"left"|"right"|string, modules?:Mo
 		type: "render",
 		auto_bg: false,
 		auto_fg: false,
-		render() {
-			this.bg_color = startStyle;
+		render(env: RenderEnvironment) {
+			env.bg_color = startStyle;
 			return style(start, `reset fg:${startStyle}`);
 		}
 	};
@@ -177,9 +192,9 @@ export function powerline(a:string,b:string,c:"left"|"right"|string, modules?:Mo
 		type: "render",
 		auto_bg: false,
 		auto_fg: false,
-		render() {
-			let color = this.bg_color;
-			this.bg_color = null;
+		render(env: RenderEnvironment) {
+			let color = env.bg_color;
+			env.bg_color = null;
 			return style(end, `reset fg:${color} bg:none`);
 		}
 	};
@@ -202,28 +217,43 @@ export function powerline(a:string,b:string,c:"left"|"right"|string, modules?:Mo
  * - `free`: Current size free, in human-readable format.
  * - `used`: Current amount used, in human-readable format.
  * - `total`: Total amount of installed RAM, in human-readable format.
+ * 
+ * If `format2` is defined, it will toggle between both formats when clicked.
  */
-export function ram(format: FormatString): RenderModule {
+export function ram(format: FormatString, format2: FormatString): RenderModuleTyped<{isState2: boolean}>
+export function ram(format: FormatString): RenderModuleTyped<{isState2: boolean}>
+export function ram(format: FormatString, format2?: FormatString): RenderModuleTyped<{isState2: boolean}> {
 	return {
 		type: "render",
 		render() {
 			let free = os.freemem();
 			let total = os.totalmem();
 			let used = total - free;
-			return applyFormat(format, {
+
+			let env = {
 				ramUsagePercent: percent(used / total),
 				free: humanBytes(free),
 				used: humanBytes(used),
 				total: humanBytes(total),
-			})
-		}
+			};
+
+			if(this.data.isState2 && format2) 
+				return applyFormat(format2, env);
+			else
+				return applyFormat(format, env);
+		},
+		input(event) {
+			if(event.type == "mouseLeft")
+				this.data.isState2 = !this.data.isState2;
+		},
+		data: {isState2: false},
 	};
 }
 /** Experimental. Uses a command to get the current input binding state of i3wm. Provides the format option `state`. */
 export function i3state(format: FormatString): RenderModule {
 	return {
 		type: "render",
-		render() {
+		render(env) {
 			let state = cp
 				.execSync("i3-msg -t GET_BINDING_STATE | jq .name | tr -d '\"'")
 				.toString('utf8').trim();

@@ -17,14 +17,13 @@ export default {
 	],
 	display_right: [
 		powerline("", "", "blue", [
-			ram("RAM {ramUsagePercent} ({used}/{total})")
+			ram("RAM {ramUsagePercent}", "RAM {used}/{total}"),
 		]),
 		text(" "),
 
 		powerline("", "", "red", [
-			time(" {shortMonthName} {dayOfMonth}{dayOfMonthSuffix}, {year}"),
-			powerline("", "bright-red", "right"),
-			time(" {twelveHour}:{minute}:{second}"),
+			time(" {twelveHour}:{minute}:{second}", " {shortMonthName} {dayOfMonth}{dayOfMonthSuffix}, {year}"),
+			// powerline("", "bright-red", "right"),
 		]),
 	],
 }
