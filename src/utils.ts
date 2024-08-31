@@ -12,7 +12,9 @@ function strip(text: string): string {
 }
 
 export function vislength(text: string): number {
-	return strip(text).length;
+	//https://stackoverflow.com/questions/54369513/how-to-count-the-correct-length-of-a-string-with-emojis-in-javascript
+	//See the above stackoverflow for info on why I use [...()].length.
+	return [...strip(text)].length;
 }
 
 let byteSuffixes = ["B", "KiB", "MiB", "GiB", "TiB", "PiB",];
