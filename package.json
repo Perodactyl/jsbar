@@ -1,7 +1,6 @@
 {
 	"name": "jsbar",
 	"displayName": "JSBar",
-
 	"author": {
 		"name": "Perodactyl",
 		"email": "friedwhoman@gmail.com",
@@ -11,17 +10,13 @@
 		"type": "github",
 		"url": "https://github.com/Perodactyl/jsbar"
 	},
-
 	"license": "LGPL-3.0-or-later",
-
 	"scripts": {
 		"build": "rollup --config",
 		"unbuild": "rm jsbar.js",
 		"start": "JSBAR_HOME=$(pwd) ./bar.sh"
 	},
-
 	"bin": "bar.sh",
-
 	"devDependencies": {
 		"@rollup/plugin-terser": "^0.4.4",
 		"@rollup/plugin-typescript": "11.1.6",
@@ -30,8 +25,8 @@
 		"rollup": "4.21.2",
 		"tslib": "^2.7.0"
 	},
-
 	"dependencies": {
+		"loudness": "^0.4.2",
 		"systeminformation": "^5.23.5"
 	}
 }

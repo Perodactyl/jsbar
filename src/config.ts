@@ -1,4 +1,4 @@
-import { text, time, ram, powerline, i3state } from "./modules"
+import { text, time, ram, powerline, i3state, audio } from "./modules"
 
 export default {
 	display_left: [
@@ -16,6 +16,14 @@ export default {
 		// ]) : "")
 	],
 	display_right: [
+		powerline("", "", "bright-blue", [
+			audio("{volume}%", "󰝟 ", {
+				mouseLeft: "!mute",
+				scrollDown: "-5",
+				scrollUp: "+5",
+			}),
+		]),
+		text(" "),
 		powerline("", "", "blue", [
 			ram("RAM {ramUsagePercent}", "RAM {used}/{total}"),
 		]),

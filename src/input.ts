@@ -1,6 +1,6 @@
 let handleEvent; //Lazily settings this using an argument solves a circular dependency.
 
-type ClickEventType = "mouseLeft" | "mouseMiddle" | "mouseRight" | "mouseUp" | "scrollUp" | "scrollDown";
+export type ClickEventType = "mouseLeft" | "mouseMiddle" | "mouseRight" | "mouseUp" | "scrollUp" | "scrollDown";
 export interface ClickEvent {
 	type: ClickEventType,
 	position: number,

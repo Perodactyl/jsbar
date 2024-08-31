@@ -1,17 +1,18 @@
 import { freemem, totalmem } from "node:os";
-import { execSync } from "node:child_process";
 import * as sysinfo from "systeminformation";
+import { getVolume, setVolume, getMuted, setMuted } from "loudness";
 
 import { MetaModule, Module, RenderEnvironment, RenderModule, RenderModuleTyped } from "./bar";
 import style from "./style";
-import { humanBytes } from "./utils";
+import { getCmd, humanBytes } from "./utils";
+import { ClickEventType } from "./input";
 
 function percent(value) {
 	return `${Math.round(value * 100)}%`;
 }
 
 /** A string with substitutions made using {key}. */
-type FormatString = string | ((info: object) => string|Promise<string>);
+type FormatString = string | ((info: {[key:string]:any}) => string|Promise<string>);
 
 /** Applies substitutions to a Format String. */
 async function applyFormat(text: FormatString, env: object) {
@@ -140,8 +141,7 @@ export function command(command: string): RenderModule {
 	return {
 		type: "render",
 		render() {
-			let stdout = execSync(command);
-			return stdout.toString('utf8').trim();
+			return getCmd(command);
 		},
 	};
 }
@@ -264,13 +264,90 @@ export function ram(format: FormatString, format2?: FormatString): RenderModuleT
 		data: {isState2: false},
 	};
 }
+
+type AudioAction = `+${number}` | `-${number}` | `=${number}` | "mute" | "unmute" | "!mute";
+type AudioActions = {
+	[key in ClickEventType]?: AudioAction;
+};
+
+/**
+ * Outputs volume and mute state.
+ * 
+ * Format values:
+ * - `mute`: (boolean) True if the output is muted.
+ * - `volume`: (number) Volume as a percent (without the percent sign).
+ * 
+ * @param actions Maps mouse events to an action:
+ * - `!mute` toggles mute.
+ * - `mute` enables mute.
+ * - `unmute` disables mute.
+ * - `+num` increases volume by num.
+ * ` `-num` decreases volume by num.
+ * ` `=num` sets the volume to a specific value.
+ * 
+ * Seems like the volume maxes at 100%.
+ * 
+ * This module uses the NPM package "loudness" which internally uses ALSA on linux.
+ */
+export function audio(format: FormatString, actions: AudioActions): RenderModule
+export function audio(format: FormatString, muteFormat: FormatString, actions: AudioActions): RenderModule
+export function audio(a: FormatString, b: FormatString|AudioActions, c?: AudioActions): RenderModule {
+	let format = a;
+	let actions = b;
+	let muteFormat;;
+	
+	if(c) {
+		muteFormat = <FormatString>b;
+		actions = c;
+	}
+	
+	return {
+		type: "render",
+		async render() {
+			let env = {
+				volume: await getVolume(),
+				mute: await getMuted(),
+			}
+			
+			if(muteFormat && env.mute)
+				return await applyFormat(muteFormat, env);
+			else
+				return await applyFormat(format, env);
+		},
+		
+		async input(event) {
+			let action = actions[event.type];
+			if(!action)return;
+			let match: RegExpMatchArray|null|undefined;
+			if(match = action?.match(/([-+=])(\d+)/)) {
+				let op = match[1];
+				let value = Number(match[2]);
+				console.error(`audio: ${value}`);
+				if(op == "+") {
+					await setVolume((await getVolume()) + value);
+				} else if(op == "-") {
+					await setVolume((await getVolume()) - value);
+				} else {
+					await setVolume(value);
+				}
+			} else if(action == "mute") {
+				await setMuted(true);
+			} else if(action == "unmute") {
+				await setMuted(false);
+			} else if(action == "!mute") {
+				await setMuted(!(await getMuted()));
+			} else {
+				console.error(`audio: Invalid action "${action}"`)
+			}
+		},
+	};
+}
 /** Experimental. Uses a command to get the current input binding state of i3wm. Provides the format option `state`. */
 export function i3state(format: FormatString): RenderModule {
 	return {
 		type: "render",
 		render(env) {
-			let state = execSync("i3-msg -t GET_BINDING_STATE | jq .name | tr -d '\"'")
-				.toString('utf8').trim();
+			let state = getCmd("i3-msg -t GET_BINDING_STATE | jq .name | tr -d '\"'");
 			return applyFormat(format, {
 				state: state
 			});
