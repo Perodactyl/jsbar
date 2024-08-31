@@ -14,3 +14,4 @@ I recommend that you use a code editor like VSCode to configure this. Edit the f
 # Help Wanted:
 - If you know any other programs that would work well with this, please submit an issue or even a pull request!
 - I am currently unaware of how to switch what monitor KiTTY's panel kitten displays on.
+- ...and by extension this panel only displays on ONE workspace. Uhm.... this isn't very good as a panel but it was neat coding exercise.
