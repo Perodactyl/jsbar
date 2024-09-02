@@ -1,4 +1,4 @@
-import { text, time, ram, powerline, i3state, audio } from "./modules"
+import { text, time, ram, powerline, WMState, audio, conditional } from "./modules"
 
 export default {
 	display_left: [
@@ -9,11 +9,11 @@ export default {
 		])
 	],
 	display_center: [
-		// i3state(async info=>info.state != "default" ? await render([
-		// 	powerline("", "", "202", [
-		// 		text(info.state)
-		// 	])
-		// ]) : "")
+		conditional([
+			WMState("{state}")
+		], ({outputs, modules})=>{
+			return outputs.filter(o=>!o.includes("default")).length == modules.length;
+		})
 	],
 	display_right: [
 		powerline("", "", "bright-blue", [

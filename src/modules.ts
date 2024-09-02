@@ -2,7 +2,7 @@ import { freemem, totalmem } from "node:os";
 import * as sysinfo from "systeminformation";
 import { getVolume, setVolume, getMuted, setMuted } from "loudness";
 
-import { MetaModule, Module, RenderEnvironment, RenderModule, RenderModuleTyped } from "./bar";
+import { MetaModule, Module, render, RenderEnvironment, RenderModule, RenderModuleTyped } from "./bar";
 import style from "./style";
 import { getCmd, humanBytes } from "./utils";
 import { ClickEventType } from "./input";
@@ -69,6 +69,8 @@ export function time(format1: FormatString, format2?: FormatString): RenderModul
 		type: "render",
 		render() {
 			let d = new Date();
+			let twelveHour = ((d.getHours() - 1) % 12) + 1;
+			if(twelveHour == 0)twelveHour = 12;
 			let env = {
 				year: d.getFullYear(),
 				month: d.getMonth(),
@@ -110,7 +112,7 @@ export function time(format1: FormatString, format2?: FormatString): RenderModul
 					"Sun",
 				][d.getDay()-1],
 				hour: d.getHours(),
-				twelveHour: ((d.getHours() - 1) % 12) + 1,
+				twelveHour,
 				amPm: d.getHours() >= 12 ? "pm" : "am",
 				minute: d.getMinutes().toString().padStart(2,"0"),
 				second: d.getSeconds().toString().padStart(2,"0"),
@@ -342,15 +344,63 @@ export function audio(a: FormatString, b: FormatString|AudioActions, c?: AudioAc
 		},
 	};
 }
-/** Experimental. Uses a command to get the current input binding state of i3wm. Provides the format option `state`. */
-export function i3state(format: FormatString): RenderModule {
+
+/** Experimental. Uses a command to get the current input binding state of i3wm (or maybe sway?). Provides the format option `state`. */
+export function WMState(format: FormatString, provider: "i3-msg" | "swaymsg" | (()=>string|Promise<string>)="i3-msg"): RenderModule {
 	return {
 		type: "render",
-		render(env) {
-			let state = getCmd("i3-msg -t GET_BINDING_STATE | jq .name | tr -d '\"'");
+		async render(env) {
+			let state: string;
+			if(typeof provider === "string")state = getCmd(`${provider} -t GET_BINDING_STATE | jq .name | tr -d '"'`);
+			else state = await provider();
 			return applyFormat(format, {
 				state: state
 			});
 		}
 	};
 }
+
+export function group(modules: Module[]): MetaModule {
+	return {
+		type: "meta",
+		children() {
+			return modules;
+		}
+	}
+}
+
+/** Experimental. Only renders its modules if a condition is true. Unoptimized since it re-renders its whole subtree. */
+export function conditional(modules: Module[], condition: (opts: {modules: Module[], outputs: string[]})=>boolean|Promise<boolean>): MetaModule {
+	return {
+		type: "meta",
+		async children() {
+			let results: string[] = [];
+			for(let module of modules) {
+				results.push(await render([module]));
+			}
+			let opts = {
+				modules,
+				outputs: results,
+			};
+
+			let shouldRender = await condition(opts);
+			if(shouldRender) {
+				return modules;
+			} else {
+				return [];
+			}
+		},
+	}
+}
+
+/** Experimental. Displays a certain module for each X workspace. Requires xprop. */
+// export function XWorkspaces(): MetaModule {
+// 	return {
+// 		children() {
+// 			let 
+// 			return [
+
+// 			]
+// 		},
+// 	}
+// }

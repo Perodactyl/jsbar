@@ -33,7 +33,7 @@ export interface RenderEnvironment {
 	[key: string]: any
 }
 
-async function render(config: Module[], custom_env?: object) {
+export async function render(config: Module[], custom_env?: object) {
 	custom_env = custom_env ?? {};
 	let env: RenderEnvironment = {
 		fg_color: "white",
