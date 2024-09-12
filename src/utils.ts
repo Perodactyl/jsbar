@@ -34,3 +34,58 @@ export function execCmd(command: string): void {
 export function getCmd(command: string): string {
 	return execSync(command).toString("utf-8").trim();
 }
+
+export function percent(value: number) {
+	return `${Math.round(value * 100)}%`;
+}
+
+/** A string with substitutions made using {key}. */
+export type FormatString = string | ((info: {[key:string]:any}) => string|Promise<string>);
+
+/** Takes an object which might have a `parent` key.
+ * If it does, collapses properties, prioritizing the last element in the stack over its parents.
+ * 
+ * Recommended use case is collapsing a RenderEnvironment.
+*/
+export function collapse(data: object) {
+	let out = {};
+	let stack = [data];
+	let current = data;
+	while(true) {
+
+		if(Object.keys(current).includes("parent")) {
+			if(current["parent"] === undefined)break;
+			current = current["parent"];
+			stack.push(current);
+		} else {
+			break;
+		}
+	}
+	for(let i = stack.length-1; i >= 0; i--) {
+		out = {
+			...out,
+			...stack[i],
+		};
+	}
+	return out;
+}
+
+/** Applies substitutions to a Format String. */
+export async function applyFormat(text: FormatString, env: object) {
+	if(typeof text == "string")
+		return text.replace(/{(.*?)}/g, (match,g1)=>env[g1] ?? match);
+	else if(typeof text == "function")
+		return String(await text(env));
+	else
+		return `Cannot use type ${typeof text} as a format template.`;
+}
+
+export function naturalSort(array: Array<string|number>) {
+	array.sort((a,b)=>{
+		if(typeof a === "number" && typeof b === "number") {
+			return b - a;
+		} else {
+			return a.toString().localeCompare(b.toString(), undefined, {numeric: true});
+		}
+	});
+}

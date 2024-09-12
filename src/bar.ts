@@ -1,44 +1,17 @@
 import { vislength, display } from "./utils";
-import config from "./config";
+import configGetter from "../config.js";
 import style from "./style";
 import { beginInput, ClickEvent } from "./input";
+import { Module, RenderEnvironment } from "./module";
 
 let width = process.stdout.columns;
 console.error(`Bar is ${width} characters wide`);
 
-export interface RenderModuleTyped<T> { //Regular module which outputs something
-	type: "render",
-	render(this: RenderModuleTyped<T>, env: RenderEnvironment): string|Promise<string>, //Outputs ANSI control characters and text
-	alloc?(): number|Promise<number>, //Gets the visual length needed
-	input?(this: RenderModuleTyped<T>, event: ClickEvent): void, //TODO - Called when an input is received.
-
-	auto_bg?: boolean, //If not false, the output will automatically be styled in accordance with `env.bg_color`
-	auto_fg?: boolean,
-
-	data: T, //Usable inside calls to store state info.
-}
-export type RenderModule = Omit<RenderModuleTyped<undefined>, "data">;
-export interface MetaModule { //Module which outputs a list of children to render
-	type: "meta",
-	children(): Module[] | Promise<Module[]>,
-}
-
-export type Module = RenderModule | RenderModuleTyped<any> | MetaModule;
-
-export type ModuleProvider = (...args: any[]) => Module;
-
-export interface RenderEnvironment {
-	fg_color: string|null,
-	bg_color: string|null,
-	[key: string]: any
-}
-
-export async function render(config: Module[], custom_env?: object) {
-	custom_env = custom_env ?? {};
+export async function render(config: Module[], parent_env?: RenderEnvironment) {
 	let env: RenderEnvironment = {
 		fg_color: "white",
 		bg_color: null,
-		...custom_env,
+		parent: parent_env,
 	};
 	let result = "";
 
@@ -50,7 +23,7 @@ export async function render(config: Module[], custom_env?: object) {
 			if(segment.auto_bg != false)out = style(out, `bg:${env.bg_color}`);
 			if(segment.auto_fg != false)out = style(out, `fg:${env.fg_color}`);
 		} else {
-			out = await render(await segment.children.call(segment, env));
+			out = await render(await segment.children.call(segment, env), env);
 		}
 		
 		result += out;
@@ -91,8 +64,18 @@ async function targets(config: Module[], offset:number, getLength?: boolean): Pr
 				});
 			}
 			pos += length;
+		} else if(module.input) {
+			let length = vislength(await render(await module.children(env)));
+			totalLength += length;
+			out.push({
+				start: pos-1,
+				end: pos+length-1,
+				callback: module.input,
+				module
+			});
+			pos += length;
 		} else {
-			let [receivers, length] = await targets(await module.children(), pos, true);
+			let [receivers, length] = await targets(await module.children(env), pos, true);
 			totalLength += length;
 			out.push(...receivers);
 			pos += length;
@@ -107,8 +90,10 @@ async function targets(config: Module[], offset:number, getLength?: boolean): Pr
 }
 
 let eventTargets: EventReceiver[] = [];
+let config: null | {display_left: Module[], display_center: Module[], display_right: Module[]} = null;
 
 async function status() {
+	if(!config)return "Config has not been generated yet.";
 	let left   = await render(config.  display_left ?? []);
 	let center = await render(config.display_center ?? []);
 	let right  = await render(config. display_right ?? []);
@@ -148,6 +133,7 @@ export default async function statusbar() {
 	//Hides the terminal caret and enables mouse input.
 	process.stdout.write("\x1B[?25l\x1B[?1000h");
 	// display(await status());
+	config = await configGetter();
 	beginInput(handleEvent);
 	display("");
 	return setInterval(async ()=>{

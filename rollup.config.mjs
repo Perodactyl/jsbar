@@ -9,7 +9,7 @@ export default {
 		format: "cjs",
 	},
 	plugins: [
-		typescript(),
+		typescript({compilerOptions: {target: "ESNext"}}),
 		terser(),
 	],
 	external: [
