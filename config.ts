@@ -1,4 +1,4 @@
-import { text, WMState, conditional, renderEnv, group } from "./src/module"
+import { text, WMState, conditional, renderEnv, group, select } from "./src/module"
 
 import time from "./src/modules/time";
 import powerline from "./src/modules/powerline";
@@ -11,27 +11,29 @@ import { collapse } from "./src/utils";
 export default async () => ({
 	display_left: [
 		powerline("", "", "21", [
-			//This config looks crazy: Arrows point to the right, but they point away from the active workspace if they are next to it.
-			workspaces(()=>group([ //Makes the active workspace a different color from the rest.
-				conditional([ //IS current
+			workspaces(()=>select([
+				[ //Left of selected
+					powerline("", "32", "left"),
+					renderEnv("{thisWorkspaceName}"),
 					powerline("", "21", "left"),
+				], [ //Selected
 					powerline("", "39", "left"),
-					renderEnv("{thisWorkspace}"),
-					// powerline("", "21", "right"),
-				], ({env})=>{
-					let e = collapse(env);
-					return e["currentWorkspace"] == e["thisWorkspace"];
-				}),
-				conditional([ //NON current
+					renderEnv("{thisWorkspaceName}"),
 					powerline("", "21", "right"),
+				], [ //Right of selected
 					powerline("", "32", "right"),
-					renderEnv("{thisWorkspace}"),
-				], ({env})=>{
-					let e = collapse(env);
-					return e["currentWorkspace"] != e["thisWorkspace"];
-				}),
-			]), x11),
-			text(" "),
+					renderEnv("{thisWorkspaceName}"),
+					powerline("", "21", "right"),
+				],
+			],
+			({env})=>{
+				if(typeof env["currentWorkspaceID"] === "number" && typeof env["thisWorkspaceID"] === "number") {
+					if(env["thisWorkspaceID"] <  env["currentWorkspaceID"]) return 0;
+					if(env["thisWorkspaceID"] == env["currentWorkspaceID"]) return 1;
+					if(env["thisWorkspaceID"] >  env["currentWorkspaceID"]) return 2;
+				}
+				return 2;
+			}), x11),
 		]),
 	],
 	display_center: [
@@ -61,3 +63,22 @@ export default async () => ({
 		]),
 	],
 });
+
+group([
+	conditional([ //IS current
+		powerline("", "39", "left"),
+		renderEnv("{thisWorkspaceName}"),
+		// powerline("", "21", "right"),
+	], ({env})=>{
+		let e = collapse(env);
+		return e["currentWorkspace"] == e["thisWorkspace"];
+	}),
+	conditional([ //NON current
+		// powerline("", "21", "right"),
+		powerline("", "32", "right"),
+		renderEnv("{thisWorkspaceName}"),
+	], ({env})=>{
+		let e = collapse(env);
+		return e["currentWorkspace"] != e["thisWorkspace"];
+	}),
+])

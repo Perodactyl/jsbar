@@ -4,6 +4,8 @@ import { render } from "./bar";
 import { applyFormat, collapse, execCmd, FormatString, getCmd, humanBytes, percent } from "./utils";
 import { ClickEvent, ClickEventType } from "./input";
 
+export type Asyncable<T> = T | Promise<T>;
+
 export interface RenderModuleTyped<T> { //Regular module which outputs something
 	type: "render",
 	render(this: RenderModuleTyped<T>, env: RenderEnvironment): string|Promise<string>, //Outputs ANSI control characters and text
@@ -27,6 +29,7 @@ export type Module = RenderModule | RenderModuleTyped<any> | MetaModule;
 
 export type ModuleProvider = (...args: any[]) => Module;
 
+//Making it this way is a bit fishy.
 export interface RenderEnvironment {
 	fg_color: string|null,
 	bg_color: string|null,
@@ -67,7 +70,7 @@ export function renderEnv(format: FormatString): RenderModule {
 	}
 }
 
-/** OTF module which sets a variable in the render environment. */
+/** Internally used module which sets a variable in the render environment. */
 export function setRenderEnv(key: string | number, value: any): RenderModule {
 	return {
 		type: "render",
@@ -89,7 +92,7 @@ export function command(command: string): RenderModule {
 }
 
 /** Experimental. Uses a command to get the current input binding state of i3wm (or maybe sway?). Provides the format option `state`. */
-export function WMState(format: FormatString, provider: "i3-msg" | "swaymsg" | (()=>string|Promise<string>)="i3-msg"): RenderModule {
+export function WMState(format: FormatString, provider: "i3-msg" | "swaymsg" | (()=>Asyncable<string>)="i3-msg"): RenderModule {
 	return {
 		type: "render",
 		async render(env) {
@@ -112,8 +115,8 @@ export function group(modules: Module[]): MetaModule {
 	}
 }
 
-/** Experimental. Only renders its modules if a condition is true. Unoptimized since it re-renders its whole subtree. */
-export function conditional(modules: Module[], condition: (opts: {modules: Module[], outputs: string[], env: RenderEnvironment})=>boolean|Promise<boolean>): MetaModule {
+/** Only renders its modules if a condition is true. Unoptimized since it re-renders its whole subtree. */
+export function conditional(modules: Module[], condition: (opts: {modules: Module[], outputs: string[], env: RenderEnvironment})=>Asyncable<boolean>): MetaModule {
 	return {
 		type: "meta",
 		async children(env) {
@@ -130,6 +133,28 @@ export function conditional(modules: Module[], condition: (opts: {modules: Modul
 			let shouldRender = await condition(opts);
 			if(shouldRender) {
 				return modules;
+			} else {
+				return [];
+			}
+		},
+	}
+}
+
+/** Checks a callback to determine which selection from the `modules` array to use.
+ * @param checker Function which either returns number (index into modules array) or null (do not render).
+*/
+export function select(modules: Module[][], checker: (opts: {env: RenderEnvironment})=>Asyncable<number|null>): MetaModule {
+	return {
+		type: "meta",
+		async children(env) {
+			let opts = {
+				env: env,
+			};
+
+			let target = await checker(opts);
+
+			if(typeof target === "number") {
+				return modules[target];
 			} else {
 				return [];
 			}

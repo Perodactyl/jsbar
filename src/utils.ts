@@ -80,12 +80,10 @@ export async function applyFormat(text: FormatString, env: object) {
 		return `Cannot use type ${typeof text} as a format template.`;
 }
 
-export function naturalSort(array: Array<string|number>) {
-	array.sort((a,b)=>{
-		if(typeof a === "number" && typeof b === "number") {
-			return b - a;
-		} else {
-			return a.toString().localeCompare(b.toString(), undefined, {numeric: true});
-		}
-	});
+export function naturalSort(a: string|number, b: string|number): number {
+	if(typeof a === "number" && typeof b === "number") {
+		return a - b;
+	} else {
+		return a.toString().localeCompare(b.toString(), undefined, {numeric: true});
+	}
 }
