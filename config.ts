@@ -1,4 +1,4 @@
-import { text, WMState, conditional, renderEnv, group, select } from "./src/module"
+import { text, WMState, conditional, renderEnv, group, select, color } from "./src/module"
 
 import time from "./src/modules/time";
 import powerline from "./src/modules/powerline";
@@ -7,6 +7,7 @@ import audio from "./src/modules/audio";
 import workspaces from "./src/modules/workspaces";
 import x11 from "./src/backend/x11";
 import { collapse } from "./src/utils";
+import window from "./src/modules/window";
 
 export default async () => ({
 	display_left: [
@@ -34,6 +35,13 @@ export default async () => ({
 				}
 				return 2;
 			}), x11),
+		]),
+
+		text(" "),
+
+		powerline("", "", "22", [
+			color("34 bold"),
+			window("{title}", x11),
 		]),
 	],
 	display_center: [

@@ -20,4 +20,9 @@ export interface WindowingSystemBackend extends Backend {
 	 * @returns true on success.
 	 */
 	setWorkspace?: (target: string)=>boolean,
+	/**
+	 * This function may or may not be implemented.
+	 * @returns Title text of the currently focused window.
+	 */
+	getWindowTitle?: ()=>string|undefined,
 }

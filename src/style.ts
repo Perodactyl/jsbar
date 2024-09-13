@@ -1,6 +1,6 @@
 let fg_map = new Map();
 let bg_map = new Map();
-let color_std = [
+const color_std = <const>[
 	"black",
 	"red",
 	"green",
@@ -10,7 +10,7 @@ let color_std = [
 	"cyan",
 	"white",
 ];
-let color_bright = [
+const color_bright = <const>[
 	"bright-black",
 	"bright-red",
 	"bright-green",
@@ -30,6 +30,8 @@ for(let i = 0; i < color_bright.length; i++) {
 }
 fg_map.set("none", 39);
 bg_map.set("none", 49);
+
+export type StyleString = typeof color_std[number] | typeof color_bright[number] | `#${string}` | string;
 
 export default function style(text: string, opts: string) {
 	let out = text;

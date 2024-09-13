@@ -1,8 +1,12 @@
+//Common utility modules which are most likely to be handy.
+
 import { getVolume, setVolume, getMuted, setMuted } from "loudness";
 
 import { render } from "./bar";
 import { applyFormat, collapse, execCmd, FormatString, getCmd, humanBytes, percent } from "./utils";
 import { ClickEvent, ClickEventType } from "./input";
+import { StyleString } from "./style";
+import style from "./style";
 
 export type Asyncable<T> = T | Promise<T>;
 
@@ -112,6 +116,16 @@ export function group(modules: Module[]): MetaModule {
 		children() {
 			return modules;
 		}
+	}
+}
+
+export function color(fg: StyleString): RenderModule {
+	return {
+		type: "render",
+		render(env) {
+			env["fg_color"] = fg;
+			return style("", `fg:${fg}`);
+		},
 	}
 }
 
