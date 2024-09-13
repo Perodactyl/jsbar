@@ -50,11 +50,7 @@ export default async () => ({
 		]),
 	],
 	display_center: [
-		conditional([
-			WMState("{state}")
-		], ({outputs, modules})=>{
-			return outputs.filter(o=>!o.includes("default")).length == modules.length;
-		})
+		WMState("{state}")
 	],
 	display_right: [
 		powerline("", "", "bright-blue", [

@@ -1,6 +1,6 @@
 //Common utility modules which are most likely to be handy.
 
-import { render } from "./bar";
+// import { render } from "./bar";
 import { applyFormat, collapse, FormatString, getCmd, Asyncable } from "./utils";
 import { ClickEvent } from "./input";
 import { StyleString } from "./style";
@@ -125,18 +125,14 @@ export function color(fg: StyleString): RenderModule {
 	}
 }
 
-/** Only renders its modules if a condition is true. Unoptimized since it re-renders its whole subtree. */
-export function conditional(modules: Module[], condition: (opts: {modules: Module[], outputs: string[], env: RenderEnvironment})=>Asyncable<boolean>): MetaModule {
+/** Only renders its modules if a condition is true. */
+export function conditional(modules: Module[], condition: (opts: {modules: Module[], env: RenderEnvironment})=>Asyncable<boolean>): MetaModule {
 	return {
 		type: "meta",
 		async children(env) {
 			let results: string[] = [];
-			for(let module of modules) {
-				results.push(await render([module]));
-			}
 			let opts = {
 				modules,
-				outputs: results,
 				env: env,
 			};
 

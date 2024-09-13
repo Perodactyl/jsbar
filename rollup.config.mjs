@@ -13,6 +13,7 @@ export default {
 		terser(),
 	],
 	external: [
-		"node:os", "node:child_process",
+		/node:.*/,
+		"loudness",
 	]
 }

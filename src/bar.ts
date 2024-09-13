@@ -5,7 +5,7 @@ import { beginInput, ClickEvent } from "./input";
 import { Module, RenderEnvironment } from "./module";
 
 let width = process.stdout.columns;
-console.error(`Bar is ${width} characters wide`);
+console.error(`Bar is ${width} characters wide/`);
 
 export async function render(config: Module[], parent_env?: RenderEnvironment) {
 	let env: RenderEnvironment = {
