@@ -109,7 +109,7 @@ export default <WindowingSystemBackend> {
 		let root = xprop();
 		// console.error(root);
 		let active = root.get("_NET_ACTIVE_WINDOW");
-		if(!active) {
+		if(!active || active && !Array.isArray(active) && active.type === "window" && active.id === "0x0") {
 			let wmName = root.get("_NET_WM_NAME");
 			if(wmName && !Array.isArray(wmName) && wmName.type === "string") return wmName.value;
 			return "Desktop";
