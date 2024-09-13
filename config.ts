@@ -1,13 +1,18 @@
 import { text, WMState, conditional, renderEnv, group, select, color } from "./src/module"
 
-import time from "./src/modules/time";
 import powerline from "./src/modules/powerline";
+
+import time from "./src/modules/time";
 import ram from "./src/modules/ram";
 import audio from "./src/modules/audio";
+
 import workspaces from "./src/modules/workspaces";
-import x11 from "./src/backend/x11";
-import { collapse } from "./src/utils";
 import window from "./src/modules/window";
+
+import { collapse } from "./src/utils";
+
+import loudness from "./src/backend/loudness";
+import x11 from "./src/backend/x11";
 
 export default async () => ({
 	display_left: [
@@ -57,7 +62,7 @@ export default async () => ({
 				mouseLeft: "!mute",
 				scrollDown: "-5",
 				scrollUp: "+5",
-			}),
+			}, loudness),
 		]),
 		text(" "),
 		powerline("", "", "blue", [

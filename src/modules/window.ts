@@ -5,9 +5,9 @@ import { applyFormat, FormatString } from "../utils";
 export default function window(format: FormatString, backend: WindowingSystemBackend): RenderModule {
 	return {
 		type: "render",
-		render() {
+		async render() {
 			return applyFormat(format, {
-				title: backend.getWindowTitle ? backend.getWindowTitle() : undefined,
+				title: backend.getWindowTitle ? await backend.getWindowTitle() : undefined,
 			});
 		}
 	}

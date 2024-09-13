@@ -1,14 +1,10 @@
 //Common utility modules which are most likely to be handy.
 
-import { getVolume, setVolume, getMuted, setMuted } from "loudness";
-
 import { render } from "./bar";
-import { applyFormat, collapse, execCmd, FormatString, getCmd, humanBytes, percent } from "./utils";
-import { ClickEvent, ClickEventType } from "./input";
+import { applyFormat, collapse, FormatString, getCmd, Asyncable } from "./utils";
+import { ClickEvent } from "./input";
 import { StyleString } from "./style";
 import style from "./style";
-
-export type Asyncable<T> = T | Promise<T>;
 
 export interface RenderModuleTyped<T> { //Regular module which outputs something
 	type: "render",

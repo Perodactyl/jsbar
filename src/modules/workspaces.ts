@@ -20,16 +20,16 @@ export default function workspaces(provider: ModuleProvider, backend: WindowingS
 	if(!backend.listWorkspaces)throw new Error(`Workspaces: Backend "${backend.name}" does not provide listWorkspaces functionality.`);
 	return {
 		type: "meta",
-		children() { //TODO fix ID vs Index.
+		async children() { //TODO fix ID vs Index.
 			if(!backend.listWorkspaces)throw new Error(`Workspaces: Backend "${backend.name}" does not provide listWorkspaces functionality.`);
-			let workspaces = backend.listWorkspaces();
+			let workspaces = await backend.listWorkspaces();
 
 			let output: Module[] = [];
 
 			let currentID: number|null = null;
 
 			if(backend.getActiveWorkspace) {
-				let current = backend.getActiveWorkspace();
+				let current = await backend.getActiveWorkspace();
 				output.push(setRenderEnv("currentWorkspaceName", workspaces[current]));
 				output.push(setRenderEnv("currentWorkspaceID", current));
 				currentID = current;

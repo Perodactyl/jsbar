@@ -39,6 +39,9 @@ export function percent(value: number) {
 	return `${Math.round(value * 100)}%`;
 }
 
+/** Return type of functions which may or may not be async. */
+export type Asyncable<T> = T | Promise<T>;
+
 /** A string with substitutions made using {key}. */
 export type FormatString = string | ((info: {[key:string]:any}) => string|Promise<string>);
 

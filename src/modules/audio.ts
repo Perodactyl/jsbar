@@ -3,6 +3,7 @@ import { getVolume, getMuted, setVolume, setMuted } from "loudness";
 import { ClickEventType } from "../input";
 import { RenderModule } from "../module";
 import { applyFormat, FormatString } from "../utils";
+import { AudioSystemBackend } from "../backend/backend";
 
 type AudioAction = `+${number}` | `-${number}` | `=${number}` | "mute" | "unmute" | "!mute";
 type AudioActions = {
@@ -28,24 +29,26 @@ type AudioActions = {
  * 
  * This module uses the NPM package "loudness" which internally uses ALSA on linux.
  */
-export default function audio(format: FormatString, actions: AudioActions): RenderModule
-export default function audio(format: FormatString, muteFormat: FormatString, actions: AudioActions): RenderModule
-export default function audio(a: FormatString, b: FormatString|AudioActions, c?: AudioActions): RenderModule {
+export default function audio(format: FormatString, actions: AudioActions, backend: AudioSystemBackend): RenderModule
+export default function audio(format: FormatString, muteFormat: FormatString, actions: AudioActions, backend: AudioSystemBackend): RenderModule
+export default function audio(a: FormatString, b: FormatString|AudioActions, c: AudioActions|AudioSystemBackend, d?: AudioSystemBackend): RenderModule {
 	let format = a;
 	let actions = b;
 	let muteFormat: FormatString;
+	let backend = c as AudioSystemBackend;
 	
-	if(c) {
+	if(typeof (c as any).name === "undefined") {
 		muteFormat = <FormatString>b;
-		actions = c;
+		actions = c as AudioActions;
+		backend = d as AudioSystemBackend;
 	}
 	
 	return {
 		type: "render",
 		async render() {
 			let env = {
-				volume: await getVolume(),
-				mute: await getMuted(),
+				volume: await backend.getVolume(),
+				mute: await backend.getMuted(),
 			}
 			
 			if(muteFormat && env.mute)
@@ -63,18 +66,18 @@ export default function audio(a: FormatString, b: FormatString|AudioActions, c?:
 				let value = Number(match[2]);
 				console.error(`audio: ${value}`);
 				if(op == "+") {
-					await setVolume((await getVolume()) + value);
+					await backend.setVolume((await backend.getVolume()) + value);
 				} else if(op == "-") {
-					await setVolume((await getVolume()) - value);
+					await backend.setVolume((await backend.getVolume()) - value);
 				} else {
-					await setVolume(value);
+					await backend.setVolume(value);
 				}
 			} else if(action == "mute") {
-				await setMuted(true);
+				await backend.setMuted(true);
 			} else if(action == "unmute") {
-				await setMuted(false);
+				await backend.setMuted(false);
 			} else if(action == "!mute") {
-				await setMuted(!(await getMuted()));
+				await backend.setMuted(!(await backend.getMuted()));
 			} else {
 				console.error(`audio: Invalid action "${action}"`)
 			}
